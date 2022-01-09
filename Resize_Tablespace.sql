@@ -25,18 +25,35 @@ alter tablespace fred add datafile '/u01/oracle/oradata/booktst_users_02.dbf' si
 
 
 -- Vamos alterar o tamanaho de um datafile da System Tablespace
-select file_name,bytes/1024/1024 mb from dba_data_files where tablespace_name = 'SYSTEM' order by file_name;
+select file_name, bytes/1024/1024 mb from dba_data_files where tablespace_name = 'SYSTEM' order by file_name;
 
 -- FILE_NAME                                        MB
 -- +CWBAU/sritam01/datafile/system.260.932399649   30000
 
-alter database datafile ‘+DBA/sritam01/datafile/system.260.932399649’ RESIZE 30001M;
+alter database datafile '+DBA/sritam01/datafile/system.260.932399649' RESIZE 30001M;
 
 select file_name,bytes/1024/1024 mb from dba_data_files where tablespace_name = ‘SYSTEM’ order by file_name;
 
 -- FILE_NAME                                        MB
 -- +DBA/sritam01/datafile/system.260.932399649     30001
 
+---------
+-- Add datafile no RAC
+---------
+
+-- Check Free Space in the diskgroup .
+SELECT name, free_mb, total_mb, free_mb/total_mb*100 as percentage FROM v$asm_diskgroup;
+
+-- Check the diskgroup name which is mapped to SYSAUX tablesapce .
+select tablespace_name,file_name from dba_data_files where tablespace_name='SYSAUX';
+
+alter tablespace USER-TABLESPACE add datafile '+DATAGROUP' size 10G;
+
+--  Add the datafile to tablespace in diskgroup.
+alter tablespace SYSAUX add datafile '+DATA' size 5G autoextend on next 1024M;
+
+-- Verify the same.
+select tablespace_name, file_name, bytes/1024/1024/1024 from dba_data_files;
 
 ----------------------------------------------------------------
 -- resize Temp tablespace in asm rac
