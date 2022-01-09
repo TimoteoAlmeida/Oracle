@@ -13,7 +13,7 @@ select thread#,dest_id,sequence#,first_time,next_time from v$archived_log where 
 select dest_id, sequence#, applied from v$archive_log
 where desct_id =2
 and sequence# > ( select max(sequence#) - 10 from v$archived_log )
-order by sequence#
+order by sequence# ;
 --
 --
 -- Verificar o status dos Bancos, Primário e Secundario
