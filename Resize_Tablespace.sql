@@ -47,13 +47,14 @@ SELECT name, free_mb, total_mb, free_mb/total_mb*100 as percentage FROM v$asm_di
 -- Check the diskgroup name which is mapped to SYSAUX tablesapce .
 select tablespace_name,file_name from dba_data_files where tablespace_name='SYSAUX';
 
-alter tablespace USER-TABLESPACE add datafile '+DATAGROUP' size 10G;
-
 --  Add the datafile to tablespace in diskgroup.
 alter tablespace SYSAUX add datafile '+DATA' size 5G autoextend on next 1024M;
 
 -- Verify the same.
 select tablespace_name, file_name, bytes/1024/1024/1024 from dba_data_files;
+
+--exemplo
+alter tablespace USER-TABLESPACE add datafile '+DATAGROUP' size 10G;
 
 ----------------------------------------------------------------
 -- resize Temp tablespace in asm rac
