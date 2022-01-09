@@ -7,13 +7,11 @@ join dba_data_files b on (a.tablespace_name = b.tablespace_name)
 -- a.tablespace_name = 'coloque aqui o nome da tablespace'
 order by a.tablespace_name;
  
--- Finalmente aumentando nossa tablespace
+-- Faz resize da tablespace
 alter database datafile '/home/u01/app/oracle/oradata/databasename/tbls_1.dbf' resize 750m; 
 
 -- Ou dicionando Datafile ao Tablespace 
-alter tablespace fred
-add datafile '/u01/oracle/oradata/booktst_users_02.dbf' size 150M 
-autoextend off;
+alter tablespace fred add datafile '/u01/oracle/oradata/booktst_users_02.dbf' size 150M autoextend off;
 
 ----------------------------------------------------------------
 -- Resize em RAC
