@@ -1,0 +1,308 @@
+-------------------------
+-- Standby Database 
+-----------
+-- ORA-16766 Redo Apply is stopped.
+
+-- https://docs.oracle.com/en/database/oracle/oracle-database/21/dgbkr/examples-using-data-guard-broker-DGMGRL-utility.html#GUID-D9018A5C-8C7A-4F6C-A7D3-B14E5AF7D4BC
+
+-- No primário
+
+-- Queries para ajudar da administração.
+
+-- Status do BD   
+select name, db_unique_name, database_role,switchover_status from v$database; 
+
+switchover_status deve ficar assim: 
+-- A resposta para o primario é  : TO STANDBY
+-- A resposta para o secundario é: NOT ALLOWED
+
+-- Conferir vc tem que olhar no alert do primario e usar a consulta abaixo:
+select thread#,
+       dest_id,
+	   sequence#,
+	   first_time,
+	   next_time 
+from v$archived_log 
+where resetlogs_change# = (select resetlogs_change# from v$database) 
+order by thread#, sequence#, dest_id;
+
+-- Comando vai gerar um archive log
+alter system switch logfile;   
+
+-- Verificar em qual numero esta o archive log
+SELECT APPLIED_SCN, LATEST_SCN FROM V$LOGSTDBY_PROGRESS;
+
+-- Configuração do Primary ( leilao01 )
+
+-- Verificar se está em modo archive
+
+SQL> archive log list
+Modo log de banco de dados     Modo de Arquivamento
+Arquivamento automßtico             Ativado
+Destino de arquivamento            C:\app\oracle\leilao01\archive
+A sequÛncia de log on-line mais antiga     74
+Pr¾xima sequÛncia de log a arquivar   76
+SequÛncia de log atual           76
+
+-- Verificar se está com o force logging mode
+SQL> select force_logging from v$database;
+FOR
+---
+NO
+
+SQL> alter database force logging;
+
+-- Configurar o log_archive_config com os bancos
+SQL>  alter system set log_archive_config='DG_CONFIG=(leilao01,leilao02)' scope=both;
+
+-- Configurar o destino do archivelog e parâmetros de conversão ( creio que ele vá usar o FRA) ver depois
+SQL> alter system set log_archive_dest_2='SERVICE=leilao02 VALID_FOR=(ONLINE_LOGFILES,PRIMARY_ROLE) DB_UNIQUE_NAME=leilao02';
+
+Sistema alterado.
+
+SQL> alter system set log_archive_dest_state_2=enable;
+
+Sistema alterado.
+
+-- Parametro de remote_login deve está exclusive
+SQL> show parameter remote_login
+
+NAME                                 TYPE        VALUE
+------------------------------------ ----------- ------------------------------
+remote_login_passwordfile            string      EXCLUSIVE
+SQL>
+
+
+-- Usando a ferramenta dgmgrl no linux ou windows
+$dgmgrl
+
+DGMGRL>connect /
+DGMGRL>show configuration;
+DGMGRL>show database '<database_name>';
+
+DGMGRL>disable configuration;
+DGMGRL>enable configuration;
+
+DGMGRL> SHOW RESOURCE 'Sales_db';
+DGMGRL> SHOW RESOURCE VERBOSE Sales_db;
+
+-- The following example displays the last 20 lines of the database alert log for the SITE_NAME site.
+
+DGMGRL> SHOW LOG ALERT LATEST ON SITE ‘SITE_NAME’;
+DRSLOG
+LINE LOG
+
+-- dgmgrl (Data Guard Manager) utility
+
+$dgmgrl [-silent | -echo] [username/password[@connect_identifier] [dgmgrl_command]]
+$dgmgrl sys/pwd
+$dgmgrl sys/pwd@oltp
+$dgmgrl -logfile observer.log / “stop observer”
+$dgmgrl sys/test@dgprimary “show database ‘prod'”
+$dgmgrl -silent sys/test@dgprimary “show configuration verbose”
+
+-- ADD – Adds a standby database to the broker configuration.
+DGMGRL> ADD DATABASE db_name [AS CONNECT IDENTIFIER IS conn_identifier] [MAINTAINED AS {PHYSICAL|LOGICAL}];
+DGMGRL> ADD DATABASE 'testdb' AS CONNECT IDENTIFIER IS testdb MAINTAINED AS PHYSICAL;
+DGMGRL> ADD DATABASE 'logdb' AS CONNECT IDENTIFIER IS logdb MAINTAINED AS LOGICAL;
+DGMGRL> ADD DATABASE 'devdb' AS CONNECT IDENTIFIER IS devdb.foo.com;
+
+-- CONNECT – Connects to an Oracle database instance.
+DGMGRL> CONNECT username/password[@connect_identifier]
+DGMGRL> CONNECT sys;
+DGMGRL> CONNECT sys@test;
+DGMGRL> CONNECT sys/pwd;
+DGMGRL> CONNECT sys/pwd@dwh;
+$dgmgrl connect sys
+
+-- CONVERT – Converts a database from one type to another (from Oracle 11g).
+DGMGRL> CONVERT DATABASE database_name TO {SNAPSHOT STANDBY|PHYSICAL STANDBY};
+DGMGRL> CONVERT DATABASE 'devdb' to SNAPSHOT STANDBY;
+DGMGRL> CONVERT DATABASE 'devdb' to PHYSICAL STANDBY;
+
+-- CREATE – Creates a broker configuration.
+DGMGRL> CREATE CONFIGURATION config_name AS PRIMARY DATABASE IS db_name CONNECT IDENTIFIER IS conn_ident;
+DGMGRL> CREATE CONFIGURATION 'dg' AS PRIMARY DATABASE IS 'prod' CONNECT IDENTIFIER IS prod.foo.com;
+DGMGRL> CREATE CONFIGURATION 'dg_test' AS PRIMARY DATABASE IS 'test' CONNECT IDENTIFIER IS test;
+
+-- DISABLE – Disables a configuration, a database, or fast-start failover (FSFO).
+DGMGRL> DISABLE CONFIGURATION;
+DGMGRL> DISABLE CONFIGURATION;
+
+DGMGRL> DISABLE DATABASE database_name;
+DGMGRL> DISABLE DATABASE 'devdb';
+
+DGMGRL> DISABLE FAST_START FAILOVER [FORCE | CONDITION condition];
+DGMGRL> DISABLE FAST_START FAILOVER;
+DGMGRL> DISABLE FAST_START FAILOVER FORCE;
+
+-- EDIT – Edits a configuration, database, or instance.
+DGMGRL> EDIT CONFIGURATION SET PROTECTION MODE AS {MaxProtection|MaxAvailability|MaxPerformance};
+DGMGRL> EDIT CONFIGURATION SET PROTECTION MODE AS MAXPROTECTION;
+DGMGRL> EDIT CONFIGURATION SET PROTECTION MODE AS MAXAVAILABILITY;
+DGMGRL> EDIT CONFIGURATION SET PROTECTION MODE AS MAXPERFORMANCE;
+
+DGMGRL> EDIT CONFIGURATION SET PROPERTY property_name = value;
+DGMGRL> EDIT CONFIGURATION SET PROPERTY FastStartFailoverThreshold = 45;
+
+DGMGRL> EDIT DATABASE database_name SET PROPERTY property_name = value;
+DGMGRL> EDIT DATABASE devdb SET PROPERTY 'LogArchiveFormat'='log_%t_%s_%r_%d.arc';
+DGMGRL> EDIT DATABASE prodb SET PROPERTY LogXptMode=SYNC;
+DGMGRL> EDIT DATABASE prodb SET PROPERTY LogXptMode=ASYNC;
+DGMGRL> EDIT DATABASE prodb SET PROPERTY LogXptMode=ARCH;
+DGMGRL> EDIT DATABASE devdb SET PROPERTY LogShipping=OFF;
+DGMGRL> EDIT DATABASE prodb SET PROPERTY LogArchiveTrace=8;
+DGMGRL> EDIT DATABASE prodb SET PROPERTY NetTimeout=60;
+DGMGRL> EDIT DATABASE devdb SET PROPERTY ‘ReopenSecs’=300;
+DGMGRL> EDIT DATABASE prodb SET PROPERTY Arch
+
+DGMGRL> EDIT INSTANCE instance_name [ON DATABASE database_name] SET PROPERTY property_name = value;
+DGMGRL> EDIT INSTANCE * ON DATABASE database_name SET PROPERTY property_name = value;
+DGMGRL> EDIT INSTANCE 'proddb' ON DATABASE 'proddb' SET PROPERTY 'StandbyArchiveLocation'='/oradata/arch/';
+
+-- ENABLE – Enables a configuration, a database, or fast-start failover (FSFO).
+DGMGRL> ENABLE CONFIGURATION;
+DGMGRL> ENABLE CONFIGURATION;
+
+DGMGRL> ENABLE DATABASE database_name;
+DGMGRL> ENABLE DATABASE ‘devdb’;
+
+DGMGRL> ENABLE FAST_START FAILOVER [CONDITION condition];
+DGMGRL> ENABLE FAST_START FAILOVER;
+
+EXIT – Exits the program.
+DGMGRL> EXIT;
+
+-- FAILOVER – Changes a standby database to be the primary database.
+DGMGRL> FAILO’;
+DGMGRL> EDIT DATABASE devdb SET STATE=’TRANSPORT-OFF’;
+DGMGRL> EDIT DATABASE devdb SET STATE=’TRANSPORT-ON’;
+DGMGRL> EDIT DATABASE prodb SET STATE=’LOG-TRANSPORT-OFF’;
+DGMGRL> EDIT DATABASE devdb SET STATE=’ONLINE’ WITH APPLY INSTANCE=devdb2;
+
+DGMGRL> EDIT INSTANCE instance_name [ON DATABASE database_name] SET AUTO PFILE [={init_file_path|OFF}];
+DGMGRL> EDIT INSTANCE ‘devdb1’ ON DATABASE ‘devdb’ SET AUTO PFILE=’initdevdb1.ora’;
+
+DGMGRL> EDIT INSTANCE instance_name [ON DATABASE database_name] SET PROPERTY property_name = value;
+DGMGRL> EDIT INSTANCE * ON DATABASE database_name SET PROPERTY property_name = value;
+DGMGRL> EDIT INSTANCE ‘proddb’ ON DATABASE ‘proddb’ SET PROPERTY ‘StandbyArchiveLocation’=’/oradata/arch/’;
+
+-- ENABLE – Enables a configuration, a database, or fast-start failover (FSFO).
+DGMGRL> ENABLE CONFIGURATION;
+DGMGRL> ENABLE CONFIGURATION;
+
+DGMGRL> ENABLE DATABASE database_name;
+DGMGRL> ENABLE DATABASE 'devdb';
+
+DGMGRL> ENABLE FAST_START FAILOVER [CONDITION condition];
+DGMGRL> ENABLE FAST_START FAILOVER;
+
+EXIT – Exits the program.
+DGMGRL> EXIT;
+
+-- FAILOVER – Changes a standby database to be the primary database.
+DGMGRL> FAILOVER TO standby_database_name [IMMEDIATE]
+DGMGRL> FAILOVER TO "testdb";
+DGMGRL> FAILOVER TO "snapdb" IMMEDIATE;
+
+-- HELP – Displays description and syntax for a command.
+DGMGRL> HELP [command];
+DGMGRL> HELP REINSTATE
+DGMGRL> HELP EDIT
+QUIT – Exits the program.
+DGMGRL> QUIT;
+
+-- REINSTATE – Changes a database marked for reinstatement into a viable standby.
+DGMGRL> REINSTATE DATABASE database_name;
+DGMGRL> REINSTATE DATABASE prim1;
+
+-- REM – Comment to be ignored by DGMGRL.
+DGMGRL> REM [comment];
+
+-- REMOVE – Removes a configuration, Oracle database, or instance.
+DGMGRL> REMOVE CONFIGURATION [PRESERVE DESTINATIONS];
+DGMGRL> REMOVE CONFIGURATION;
+DGMGRL> REMOVE CONFIGURATION PRESERVE DESTINATIONS;
+
+DGMGRL> REMOVE DATABASE database_name [PRESERVE DESTINATIONS];
+DGMGRL> REMOVE DATABASE devdb;
+DGMGRL> REMOVE DATABASE standby PRESERVE DESTINATIONS;
+
+DGMGRL> REMOVE INSTANCE instance_name [ON DATABASE database_name];
+DGMGRL> REMOVE INSTANCE inst1 ON DATABASE racdb;
+
+-- SHOW – Displays information about a configuration, database, instance or FSFO.
+DGMGRL> SHOW CONFIGURATION [VERBOSE];
+DGMGRL> SHOW CONFIGURATION;
+DGMGRL> SHOW CONFIGURATION VERBOSE;
+
+DGMGRL> SHOW DATABASE [VERBOSE] db_name [property_name];
+DGMGRL> SHOW DATABASE 'devdb';
+DGMGRL> SHOW DATABASE VERBOSE 'test';
+DGMGRL> SHOW DATABASE 'dwhdb' 'StatusReport';
+DGMGRL> SHOW DATABASE 'proddb' 'LogXptStatus';
+DGMGRL> SHOW DATABASE 'proddb' 'InconsistentProperties';
+DGMGRL> SHOW DATABASE 'proddb' 'InconsistentLogXptProps';
+DGMGRL> SHOW DATABASE 'testdb' 'ArchiveLagTarget';
+DGMGRL> SHOW DATABASE 'testdb' 'LogShipping';
+DGMGRL> SHOW DATABASE 'testdb' 'PreferredApplyInstance';
+DGMGRL> SHOW DATABASE 'proddb' 'StatusReport';
+DGMGRL> SHOW DATABASE 'testdb' 'RecvQEntries';
+DGMGRL> SHOW DATABASE 'proddb' 'SendQEntries';	
+
+DGMGRL> SHOW INSTANCE [VERBOSE] instance_name [property_name] [ON DATABASE db_name];
+DGMGRL> SHOW INSTANCE inst1;
+DGMGRL> SHOW INSTANCE VERBOSE inst3;
+DGMGRL> SHOW INSTANCE testdb 'TopWaitEvents';
+
+DGMGRL> SHOW FAST_START FAILOVER;
+DGMGRL> SHOW FAST_START FAILOVER;
+
+-- SHUTDOWN – Shuts down a currently running Oracle instance.
+DGMGRL> SHUTDOWN [NORMAL | IMMEDIATE | ABORT];
+DGMGRL> SHUTDOWN;
+DGMGRL> SHUTDOWN NORMAL;
+DGMGRL> SHUT IMMEDIATE;
+DGMGRL> SHUT ABORT;
+
+-- SQL – Executes a SQL statement
+DGMGRL> SQL "sql_statement";
+
+-- START – Starts the fast-start failover(FSFO) observer.
+DGMGRL> START OBSERVER [FILE=observer_configuration_file];
+DGMGRL> START OBSERVER;
+
+-- STARTUP – Starts an Oracle database instance.
+DGMGRL> STARTUP [RESTRICT] [FORCE] [PFILE=filespec]
+[NOMOUNT  |  MOUNT | OPEN [READ ONLY|READ WRITE]];
+DGMGRL> STARTUP;
+DGMGRL> STARTUP NOMOUNT;
+DGMGRL> STARTUP MOUNT;
+DGMGRL> STARTUP OPEN;
+DGMGRL> STARTUP FORCE;
+DGMGRL> STARTUP FORCE RESTRICT NOMOUNT;
+DGMGRL> STARTUP PFILE=initdwh.ora NOMOUNT;
+
+-- STOP – Stops the fast-start failover(FSFO) observer.
+DGMGRL> STOP OBSERVER;
+
+-- SWITCHOVER – Switches roles between a primary and standby database.
+DGMGRL> SWITCHOVER TO standby_database_name;
+DGMGRL> SWITCHOVER TO "standby";
+
+-- VALIDATE – command to checks whether the database is ready for a role transition or not.
+
+DGMGRL> VALIDATE DATABASE …;    — From Oracle Database 12c
+
+$ORACLE_HOME/rdbms/log/drc*.log
+
+alter system set dg_broker_start=false;
+alter system set dg_broker_start=false sid=’*’;
+alter system set dg_broker_start=FALSE SCOPE=spfile SID='*';
+alter system set dg_broker_start=true;
+alter system set dg_broker_start=true sid='*';
+alter system set dg_broker_start=TRUE SCOPE=spfile SID='*';
+
+alter system set dg_broker_config_file1='/u01/dg_broker_config_files/dr1TESTPRI.dat' sid='*';
+alter system set dg_broker_config_file2='/u01/dg_broker_config_files/dr2TESTPRI.dat' sid='*';
+
