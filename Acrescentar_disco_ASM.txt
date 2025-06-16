@@ -1,0 +1,314 @@
+Acrescentar disco ASM
+
+1- Site 
+https://nuvemprivada.petrobras.com.br/usm/wpf 
+
+Escolher --> Servidor Virtual
+Escolher --> Alterar
+Escolher  --> Adicionar Disco
+
+Escrever o campo --> Hostname 
+
+-- Atenção pedir discos de 75 Gigas
+
+-- Esperar o chamado ser atendido
+
+-----------------------------------------------------------------------
+Discos adicionados: sdm sdn sdo sdp sdq
+-----------------------------------------------------------------------
+
+Apos isso.:
+com usuario de root
+
+[root@npaa7200 ~]# lsblk
+NAME                      MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
+sda                         8:0    0  180G  0 disk
++-sda1                      8:1    0    1G  0 part /boot
++-sda2                      8:2    0    1G  0 part /infra-tic/install/live
++-sda3                      8:3    0  178G  0 part
+  +-vg7sda9690-root       253:0    0    2G  0 lvm  /
+  +-vg7sda9690-swap       253:1    0 35.1G  0 lvm  [SWAP]
+  +-vg7sda9690-usr        253:2    0    5G  0 lvm  /usr
+  +-vg7sda9690-varlog     253:3    0    2G  0 lvm  /var/log
+  +-vg7sda9690-var        253:4    0    5G  0 lvm  /var
+  +-vg7sda9690-tmp        253:5    0    3G  0 lvm  /tmp
+  +-vg7sda9690-opt        253:6    0    3G  0 lvm  /opt
+  +-vg7sda9690-home       253:7    0    1G  0 lvm  /home
+  +-vg7sda9690-u01--app   253:8    0   64G  0 lvm  /u01/app
+  +-vg7sda9690-u01--admin 253:9    0 37.5G  0 lvm  /u01/app/oracle/admin
+  +-vg7sda9690-u01--diag  253:10   0    8G  0 lvm  /u01/app/oracle/diag
+  +-vg7sda9690-varyum     253:11   0 12.2G  0 lvm  /var/cache/yum
+sdb                         8:16   0   75G  0 disk
++-sdb1                      8:17   0   75G  0 part
+sdc                         8:32   0   75G  0 disk
++-sdc1                      8:33   0   75G  0 part
+sdd                         8:48   0   75G  0 disk
++-sdd1                      8:49   0   75G  0 part
+sde                         8:64   0   80G  0 disk
++-sde1                      8:65   0   80G  0 part
+sdf                         8:80   0   75G  0 disk
++-sdf1                      8:81   0   75G  0 part
+sdg                         8:96   0   75G  0 disk
++-sdg1                      8:97   0   75G  0 part
+sdh                         8:112  0   80G  0 disk
+sdi                         8:128  0   75G  0 disk
++-sdi1                      8:129  0   75G  0 part
+sdj                         8:144  0   75G  0 disk
++-sdj1                      8:145  0   75G  0 part
+sdk                         8:160  0   75G  0 disk
++-sdk1                      8:161  0   75G  0 part
+sdl                         8:176  0   75G  0 disk
++-sdl1                      8:177  0   75G  0 part
+sdm                         8:192  0   75G  0 disk
+sdn                         8:208  0   75G  0 disk
+sdo                         8:224  0   75G  0 disk
+sdp                         8:240  0   75G  0 disk
+sdq                        65:0    0   75G  0 disk
+sr0                        11:0    1 1024M  0 rom
+
+---> Agora usar o fdisk para formatar os discos adionados -->  sdm sdn sdo sdp
+
+[root@npaa7200 ~]# fdisk /dev/sdp
+
+Welcome to fdisk (util-linux 2.23.2).
+
+Changes will remain in memory only, until you decide to write them.
+Be careful before using the write command.
+
+Device does not contain a recognized partition table
+Building a new DOS disklabel with disk identifier 0x30ba7781.
+
+Command (m for help): n
+Partition type:
+   p   primary (0 primary, 0 extended, 4 free)
+   e   extended
+Select (default p): p
+Partition number (1-4, default 1): 1
+First sector (2048-157286399, default 2048):
+Using default value 2048
+Last sector, +sectors or +size{K,M,G} (2048-157286399, default 157286399):
+Using default value 157286399
+Partition 1 of type Linux and of size 75 GiB is set
+
+Command (m for help): w
+The partition table has been altered!
+
+----> Validar depois 
+
+
+
+[root@npaa7200 ~]# lsblk
+NAME                      MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
+sda                         8:0    0  180G  0 disk
++-sda1                      8:1    0    1G  0 part /boot
++-sda2                      8:2    0    1G  0 part /infra-tic/install/live
++-sda3                      8:3    0  178G  0 part
+  +-vg7sda9690-root       253:0    0    2G  0 lvm  /
+  +-vg7sda9690-swap       253:1    0 35.1G  0 lvm  [SWAP]
+  +-vg7sda9690-usr        253:2    0    5G  0 lvm  /usr
+  +-vg7sda9690-varlog     253:3    0    2G  0 lvm  /var/log
+  +-vg7sda9690-var        253:4    0    5G  0 lvm  /var
+  +-vg7sda9690-tmp        253:5    0    3G  0 lvm  /tmp
+  +-vg7sda9690-opt        253:6    0    3G  0 lvm  /opt
+  +-vg7sda9690-home       253:7    0    1G  0 lvm  /home
+  +-vg7sda9690-u01--app   253:8    0   64G  0 lvm  /u01/app
+  +-vg7sda9690-u01--admin 253:9    0 37.5G  0 lvm  /u01/app/oracle/admin
+  +-vg7sda9690-u01--diag  253:10   0    8G  0 lvm  /u01/app/oracle/diag
+  +-vg7sda9690-varyum     253:11   0 12.2G  0 lvm  /var/cache/yum
+sdb                         8:16   0   75G  0 disk
++-sdb1                      8:17   0   75G  0 part
+sdc                         8:32   0   75G  0 disk
++-sdc1                      8:33   0   75G  0 part
+sdd                         8:48   0   75G  0 disk
++-sdd1                      8:49   0   75G  0 part
+sde                         8:64   0   80G  0 disk
++-sde1                      8:65   0   80G  0 part
+sdf                         8:80   0   75G  0 disk
++-sdf1                      8:81   0   75G  0 part
+sdg                         8:96   0   75G  0 disk
++-sdg1                      8:97   0   75G  0 part
+sdh                         8:112  0   80G  0 disk
+sdi                         8:128  0   75G  0 disk
++-sdi1                      8:129  0   75G  0 part
+sdj                         8:144  0   75G  0 disk
++-sdj1                      8:145  0   75G  0 part
+sdk                         8:160  0   75G  0 disk
++-sdk1                      8:161  0   75G  0 part
+sdl                         8:176  0   75G  0 disk
++-sdl1                      8:177  0   75G  0 part
+sdm                         8:192  0   75G  0 disk
++-sdm1                      8:193  0   75G  0 part
+sdn                         8:208  0   75G  0 disk
++-sdn1                      8:209  0   75G  0 part
+sdo                         8:224  0   75G  0 disk
++-sdo1                      8:225  0   75G  0 part
+sdp                         8:240  0   75G  0 disk
++-sdp1                      8:241  0   75G  0 part
+sdq                        65:0    0   75G  0 disk
+sr0                        11:0    1 1024M  0 rom
+
+
+
+---------------------------------------------
+
+--Listar os discos no ASM
+
+[root@npaa7200 ~]# oracleasm listdisks
+DSK001
+DSK002
+DSK003
+DSK004
+DSK005
+DSK006
+DSK007
+DSK008
+DSK009
+DSK010
+
+
+
+Agora colocar no grid
+
+
+[root@npaa7200 ~]# oracleasm createdisk DSK011 /dev/sdm1
+Writing disk header: done
+Instantiating disk: done
+[root@npaa7200 ~]# oracleasm createdisk DSK012 /dev/sdn1
+Writing disk header: done
+Instantiating disk: done
+[root@npaa7200 ~]# oracleasm createdisk DSK013 /dev/sdo1
+Writing disk header: done
+Instantiating disk: done
+[root@npaa7200 ~]# oracleasm createdisk DSK014 /dev/sdp1
+Writing disk header: done
+Instantiating disk: done
+
+-- Logar no grid
+
+
+[root@npaa7200 ~]# su - grid
+Last login: Mon Jun 16 13:03:30 -03 2025 on pts/99
+
+Para utilizar o home 18 (GRID INFRA) executar '. /u01/app/oracle/scripts/oraenv_18_grid_grid.sh'
+
+Setando como default home 18 (GRID INFRA)
+
+-- Logar no ASM
+
+[grid@npaa7200:~] $ sqlplus / as sysasm
+
+column path format a20
+set lines 132
+set pages 50
+
+select path, group_number group_#, disk_number disk_#, mount_status,
+header_status, state, total_mb, free_mb
+from v$asm_disk
+order by group_number;
+
+
+PATH                    GROUP_#     DISK_# MOUNT_S HEADER_STATU STATE      TOTAL_MB    FREE_MB
+-------------------- ---------- ---------- ------- ------------ -------- ---------- ----------
+ORCL:DSK014                   0          0 CLOSED  PROVISIONED  NORMAL            0          0
+ORCL:DSK012                   0          3 CLOSED  PROVISIONED  NORMAL            0          0
+ORCL:DSK013                   0          2 CLOSED  PROVISIONED  NORMAL            0          0
+ORCL:DSK011                   0          1 CLOSED  PROVISIONED  NORMAL            0          0
+ORCL:DSK004                   1          2 CACHED  MEMBER       NORMAL        81919       8040
+ORCL:DSK005                   1          3 CACHED  MEMBER       NORMAL        76799       7490
+ORCL:DSK006                   1          4 CACHED  MEMBER       NORMAL        76799       7491
+ORCL:DSK010                   1          7 CACHED  MEMBER       NORMAL        76799       7493
+ORCL:DSK008                   1          5 CACHED  MEMBER       NORMAL        76799       7488
+ORCL:DSK001                   1          0 CACHED  MEMBER       NORMAL        76799       7487
+ORCL:DSK009                   1          6 CACHED  MEMBER       NORMAL        76799       7490
+ORCL:DSK002                   1          1 CACHED  MEMBER       NORMAL        76799       7490
+ORCL:DSK007                   2          1 CACHED  MEMBER       NORMAL        76799      74431
+ORCL:DSK003                   2          0 CACHED  MEMBER       NORMAL        76799      74418
+
+14 rows selected.
+
+-- Adcionar 2 discos ao DG_DATA01
+
+SQL> alter diskgroup
+   DG_DAT01
+add disk
+   'ORCL:DSK011'; 
+
+Diskgroup altered.
+
+SQL> alter diskgroup
+   DG_DAT01
+add disk
+   'ORCL:DSK012';
+
+Diskgroup altered.
+
+--- Fazendo o rebalance
+
+SQL> select * from v$asm_operation;
+
+GROUP_NUMBER OPERA PASS      STAT      POWER     ACTUAL      SOFAR   EST_WORK   EST_RATE EST_MINUTES
+------------ ----- --------- ---- ---------- ---------- ---------- ---------- ---------- -----------
+ERROR_CODE                                       CON_ID
+-------------------------------------------- ----------
+           1 REBAL COMPACT   WAIT          1          1          0          0          0           0
+                                                      0
+
+           1 REBAL REBALANCE RUN           1          1       4733     106985      10118          10
+                                                      0
+
+           1 REBAL REBUILD   DONE          1          1          0          0          0           0
+                                                      0
+
+
+SQL>   alter diskgroup DG_DAT01 rebalance power 200;
+
+Diskgroup altered.
+
+--------------------
+
+Verificando
+
+SET LINESIZE  145
+SET PAGESIZE  9999
+SET VERIFY    off
+COLUMN group_name             FORMAT a20           HEAD 'Disk Group|Name'
+COLUMN sector_size            FORMAT 99,999        HEAD 'Sector|Size'
+COLUMN block_size             FORMAT 99,999        HEAD 'Block|Size'
+COLUMN allocation_unit_size   FORMAT 999,999,999   HEAD 'Allocation|Unit Size'
+COLUMN state                  FORMAT a11           HEAD 'State'
+COLUMN type                   FORMAT a6            HEAD 'Type'
+COLUMN total_mb               FORMAT 999,999,999   HEAD 'Total Size (MB)'
+COLUMN used_mb                FORMAT 999,999,999   HEAD 'Used Size (MB)'
+COLUMN pct_used               FORMAT 999.99        HEAD 'Pct. Used'
+ break on report on disk_group_name skip 1
+ compute sum label "Grand Total: " of total_mb used_mb on report
+ SELECT
+    name                                     group_name
+  , sector_size                              sector_size
+  , block_size                               block_size
+  , allocation_unit_size                     allocation_unit_size
+  , state                                    state
+  , type                                     type
+  , total_mb                                 total_mb
+  , (total_mb - free_mb)                     used_mb
+  , ROUND((1- (free_mb / total_mb))*100, 2)  pct_used
+FROM
+    v$asm_diskgroup
+ORDER BY
+    name
+/
+
+Disk Group            Sector   Block   Allocation
+Name                    Size    Size    Unit Size State       Type   Total Size (MB) Used Size (MB) Pct. Used
+-------------------- ------- ------- ------------ ----------- ------ --------------- -------------- ---------
+DG_DAT01                 512   4,096    1,048,576 MOUNTED     EXTERN         773,110        559,049     72.31
+DG_FRA01                 512   4,096    1,048,576 MOUNTED     EXTERN         153,598          4,749      3.09
+                                                                     --------------- --------------
+Grand Total:                                                                 926,708        563,798
+
+SQL>
+
+
+
+
+
