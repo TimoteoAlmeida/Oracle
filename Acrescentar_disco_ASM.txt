@@ -1,17 +1,7 @@
 Acrescentar disco ASM
 
 1- Site 
-https://nuvemprivada.xxxxxxx.com.br/usm/wpf 
-
-Escolher --> Servidor Virtual
-Escolher --> Alterar
-Escolher  --> Adicionar Disco
-
-Escrever o campo --> Hostname 
-
 -- Atenção pedir discos de 75 Gigas
-
--- Esperar o chamado ser atendido
 
 -----------------------------------------------------------------------
 Discos adicionados: sdm sdn sdo sdp sdq
