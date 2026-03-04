@@ -1,7 +1,7 @@
 Acrescentar disco ASM
 
 1- Site 
-https://nuvemprivada.petrobras.com.br/usm/wpf 
+https://nuvemprivada.xxxxxxx.com.br/usm/wpf 
 
 Escolher --> Servidor Virtual
 Escolher --> Alterar
@@ -20,7 +20,7 @@ Discos adicionados: sdm sdn sdo sdp sdq
 Apos isso.:
 com usuario de root
 
-[root@npaa7200 ~]# lsblk
+[root@servidor ~]# lsblk
 NAME                      MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
 sda                         8:0    0  180G  0 disk
 +-sda1                      8:1    0    1G  0 part /boot
@@ -68,7 +68,7 @@ sr0                        11:0    1 1024M  0 rom
 
 ---> Agora usar o fdisk para formatar os discos adionados -->  sdm sdn sdo sdp
 
-[root@npaa7200 ~]# fdisk /dev/sdp
+[root@servidor ~]# fdisk /dev/sdp
 
 Welcome to fdisk (util-linux 2.23.2).
 
@@ -97,7 +97,7 @@ The partition table has been altered!
 
 
 
-[root@npaa7200 ~]# lsblk
+[root@servidor ~]# lsblk
 NAME                      MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
 sda                         8:0    0  180G  0 disk
 +-sda1                      8:1    0    1G  0 part /boot
@@ -153,7 +153,7 @@ sr0                        11:0    1 1024M  0 rom
 
 --Listar os discos no ASM
 
-[root@npaa7200 ~]# oracleasm listdisks
+[root@servidor ~]# oracleasm listdisks
 DSK001
 DSK002
 DSK003
@@ -170,23 +170,23 @@ DSK010
 Agora colocar no grid
 
 
-[root@npaa7200 ~]# oracleasm createdisk DSK011 /dev/sdm1
+[root@servidor ~]# oracleasm createdisk DSK011 /dev/sdm1
 Writing disk header: done
 Instantiating disk: done
-[root@npaa7200 ~]# oracleasm createdisk DSK012 /dev/sdn1
+[root@servidor ~]# oracleasm createdisk DSK012 /dev/sdn1
 Writing disk header: done
 Instantiating disk: done
-[root@npaa7200 ~]# oracleasm createdisk DSK013 /dev/sdo1
+[root@servidor ~]# oracleasm createdisk DSK013 /dev/sdo1
 Writing disk header: done
 Instantiating disk: done
-[root@npaa7200 ~]# oracleasm createdisk DSK014 /dev/sdp1
+[root@servidor ~]# oracleasm createdisk DSK014 /dev/sdp1
 Writing disk header: done
 Instantiating disk: done
 
 -- Logar no grid
 
 
-[root@npaa7200 ~]# su - grid
+[root@servidor ~]# su - grid
 Last login: Mon Jun 16 13:03:30 -03 2025 on pts/99
 
 Para utilizar o home 18 (GRID INFRA) executar '. /u01/app/oracle/scripts/oraenv_18_grid_grid.sh'
@@ -195,7 +195,7 @@ Setando como default home 18 (GRID INFRA)
 
 -- Logar no ASM
 
-[grid@npaa7200:~] $ sqlplus / as sysasm
+[grid@servidor:~] $ sqlplus / as sysasm
 
 column path format a20
 set lines 132
